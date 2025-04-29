@@ -59,6 +59,7 @@ export default async function handler(req, res) {
 
     try {
       console.log('Notification received:', JSON.stringify(req.body));
+      console.log('Access token started');
 
       const token = await getAccessToken();
       
