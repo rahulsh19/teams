@@ -3,6 +3,7 @@ let tokenExpiry = null;
 
 async function getAccessToken() {
   const now = Date.now();
+  console.log('Access token started');
 
   // If token is still valid, return it
   if (cachedToken && tokenExpiry && now < tokenExpiry) {
@@ -60,6 +61,7 @@ export default async function handler(req, res) {
       console.log('Notification received:', JSON.stringify(req.body));
 
       const token = await getAccessToken();
+      
 
       // Adjust this part to parse the message, team, and channel IDs from the notification payload
       const resource = req.body?.value?.[0]?.resource; // example: "teams/{teamId}/channels/{channelId}/messages/{messageId}"
