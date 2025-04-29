@@ -58,6 +58,7 @@ export default async function handler(req, res) {
     }
 
     try {
+      console.log('Access token started');
       console.log('Notification received:', JSON.stringify(req.body));
       console.log('Access token started');
 
