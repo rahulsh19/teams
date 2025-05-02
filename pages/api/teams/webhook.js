@@ -101,6 +101,7 @@
 // }
 
 import axios from 'axios';
+import { Pool } from 'pg';
 
 // Replace with your actual credentials
 const TENANT_ID = process.env.TENANT_ID;
