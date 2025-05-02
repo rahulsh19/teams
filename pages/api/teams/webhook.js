@@ -107,6 +107,14 @@ const TENANT_ID = process.env.TENANT_ID;
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 
+const pool = new Pool({
+  user: 'postgres',
+  host: 'localhost',
+  database: 'teamsDB',
+  password: 'rahul4495',
+  port: 5432,
+});
+
 // Function to get an access token
 async function getAccessToken() {
   const url = `https://login.microsoftonline.com/${TENANT_ID}/oauth2/v2.0/token`;
@@ -145,6 +153,16 @@ async function fetchMessageDetails(teamId, channelId, messageId) {
     console.error('Error fetching message details:', error.response?.data || error.message);
     throw new Error('Failed to fetch message details');
   }
+}
+
+async function saveMessageToDB(messageData) {
+  const text = 'INSERT INTO message_store(id, content, created_at) VALUES($1, $2, $3)';
+  const values = [
+    messageData.id,
+    messageData.body?.content || '',
+    messageData.createdDateTime,
+  ];
+  await pool.query(text, values);
 }
 
 export default async function handler(req, res) {
