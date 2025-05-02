@@ -82,20 +82,116 @@
 //   }
 // }
 
+// export default async function handler(req, res) {
+//   if (req.method === 'POST') {
+//     // Step 1: Validate subscription
+//     if (req.query?.validationToken) {
+//       console.log("start");
+//       console.log('Validation token received:', req.query.validationToken);
+//       return res.status(200).send(req.query.validationToken);
+//     }
+
+//     // Step 2: Handle incoming notifications
+//     console.log('--- LOG: Entered Notification Handler ---');
+//     console.log('--- LOG: Notification Payload ---', JSON.stringify(req.body));
+//     return res.status(200).send('OK');
+//   } else {
+//     res.status(405).send('Method Not Allowed');
+//   }
+// }
+
+import axios from 'axios';
+
+// Replace with your actual credentials
+const TENANT_ID = process.env.TENANT_ID;
+const CLIENT_ID = process.env.CLIENT_ID;
+const CLIENT_SECRET = process.env.CLIENT_SECRET;
+
+// Function to get an access token
+async function getAccessToken() {
+  const url = `https://login.microsoftonline.com/${TENANT_ID}/oauth2/v2.0/token`;
+
+  const params = new URLSearchParams();
+  params.append('client_id', CLIENT_ID);
+  params.append('client_secret', CLIENT_SECRET);
+  params.append('grant_type', 'client_credentials');
+  params.append('scope', 'https://graph.microsoft.com/.default');
+
+  try {
+    const res = await axios.post(url, params);
+    console.log('Access token retrieved successfully');
+    return res.data.access_token;
+  } catch (error) {
+    console.error('Error fetching access token:', error.response?.data || error.message);
+    throw new Error('Failed to fetch access token');
+  }
+}
+
+// Function to fetch message details from Graph API
+async function fetchMessageDetails(teamId, channelId, messageId) {
+  const token = await getAccessToken();
+  const url = `https://graph.microsoft.com/v1.0/teams/${teamId}/channels/${channelId}/messages/${messageId}`;
+
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
+  };
+
+  try {
+    const response = await axios.get(url, { headers });
+    console.log('Fetched Message Details:', JSON.stringify(response.data, null, 2));
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching message details:', error.response?.data || error.message);
+    throw new Error('Failed to fetch message details');
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method === 'POST') {
     // Step 1: Validate subscription
     if (req.query?.validationToken) {
-      console.log("start");
-      console.log('Validation token received:', req.query.validationToken);
+      console.log("Validation token received:", req.query.validationToken);
       return res.status(200).send(req.query.validationToken);
     }
 
     // Step 2: Handle incoming notifications
     console.log('--- LOG: Entered Notification Handler ---');
     console.log('--- LOG: Notification Payload ---', JSON.stringify(req.body));
-    return res.status(200).send('OK');
+
+    try {
+      const notification = req.body.value?.[0];
+
+      if (!notification) {
+        return res.status(400).send('No notification data');
+      }
+
+      const messageId = notification.resourceData?.id;
+      const teamMatch = notification.resource.match(/teams\('([^']+)'\)/);
+      const channelMatch = notification.resource.match(/channels\('([^']+)'\)/);
+
+      const teamId = teamMatch?.[1];
+      const channelId = channelMatch?.[1];
+
+      if (!teamId || !channelId || !messageId) {
+        console.error('Missing required IDs');
+        return res.status(400).send('Invalid notification structure');
+      }
+
+      console.log('Team ID:', teamId);
+      console.log('Channel ID:', channelId);
+      console.log('Message ID:', messageId);
+
+      // Fetch message details
+      await fetchMessageDetails(teamId, channelId, messageId);
+
+      return res.status(200).send('OK');
+    } catch (err) {
+      console.error('Error processing notification:', err.message);
+      return res.status(500).send('Internal Server Error');
+    }
   } else {
     res.status(405).send('Method Not Allowed');
   }
 }
+
