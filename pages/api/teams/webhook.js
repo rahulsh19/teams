@@ -204,7 +204,10 @@ export default async function handler(req, res) {
       console.log('Message ID:', messageId);
 
       // Fetch message details
-      await fetchMessageDetails(teamId, channelId, messageId);
+      // await fetchMessageDetails(teamId, channelId, messageId);
+       const fullMessage = await fetchMessageDetails(teamId, channelId, messageId);
+       await saveMessageToDB(fullMessage);
+       console.log('Message saved:', fullMessage.body?.content);
 
       return res.status(200).send('OK');
     } catch (err) {
