@@ -169,9 +169,11 @@ export default async function handler(req, res) {
   if (req.method === 'POST') {
     // Step 1: Validate subscription
     if (req.query?.validationToken) {
-      console.log("Validation token received:", req.query.validationToken);
-      return res.status(200).send(req.query.validationToken);
-    }
+        console.log("Validation token received:", req.query.validationToken);
+        res.setHeader('Content-Type', 'text/plain'); // This line is critical
+        return res.status(200).send(req.query.validationToken);
+      }
+
 
     // Step 2: Handle incoming notifications
     console.log('--- LOG: Entered Notification Handler ---');
