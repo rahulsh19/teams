@@ -84,19 +84,16 @@
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {
-    if (req.body?.validationToken) {
-      // Log the received validation token for debuggingno validation token is found
-      console.log('Notification received');
-      console.log('Validation token received:', req.body.validationToken);
-
-      // Respond with the validation token to complete the validation
-      return res.status(200).send(req.body.validationToken);
-    } else {
-      // Handle the incoming notification if no validation token is found
-      console.log('--- LOG: Entered Notification Handler ---');
-      console.log('--- LOG: Notification Payload ---', JSON.stringify(req.body))
-      return res.status(200).send('OK'); // Respond with 'OK' or the appropriate message
+    // Step 1: Validate subscription
+    if (req.query?.validationToken) {
+      console.log('Validation token received:', req.query.validationToken);
+      return res.status(200).send(req.query.validationToken);
     }
+
+    // Step 2: Handle incoming notifications
+    console.log('--- LOG: Entered Notification Handler ---');
+    console.log('--- LOG: Notification Payload ---', JSON.stringify(req.body));
+    return res.status(200).send('OK');
   } else {
     res.status(405).send('Method Not Allowed');
   }
