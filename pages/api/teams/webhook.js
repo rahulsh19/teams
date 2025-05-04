@@ -109,11 +109,12 @@ const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 
 const pool = new Pool({
-  user: "postgres",
-  host: "localhost",
-  database: "teamsDB",
-  password: "rahul4495",
-  port: 5432,
+  user: process.env.PGUSER,         // Your Neon DB username
+  host: process.env.PGHOST,         // Your Neon DB host (e.g., ep-falling-frog...)
+  database: process.env.PGDATABASE, // Your Neon DB name (e.g., teamDB)
+  password: process.env.PGPASSWORD, // Your Neon DB password
+  port: process.env.PGPORT || 5432, // Default port for PostgreSQL
+  ssl: { rejectUnauthorized: false }, // Required for Neon (SSL)
 });
 
 // Function to get an access token
