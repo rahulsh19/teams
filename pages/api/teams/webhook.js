@@ -109,10 +109,10 @@ const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 
 const pool = new Pool({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'teamsDB',
-  password: 'rahul4495',
+  user: "postgres",
+  host: "localhost",
+  database: "teamsDB",
+  password: "rahul4495",
   port: 5432,
 });
 
