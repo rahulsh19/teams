@@ -158,14 +158,25 @@ async function fetchMessageDetails(teamId, channelId, messageId) {
 }
 
 async function saveMessageToDB(messageData) {
-  const text = 'INSERT INTO message_store(id, content, created_at) VALUES($1, $2, $3)';
+  const text = `
+    INSERT INTO message_store(id, content, created_at)
+    VALUES($1, $2, $3)
+    ON CONFLICT (id) DO NOTHING
+  `;
   const values = [
     messageData.id,
     messageData.body?.content || '',
     messageData.createdDateTime,
   ];
-  await pool.query(text, values);
+
+  try {
+    await pool.query(text, values);
+    console.log('Message saved or already exists:', messageData.id);
+  } catch (err) {
+    console.error('DB insert error:', err.message);
+  }
 }
+
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {
