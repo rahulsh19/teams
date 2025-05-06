@@ -157,7 +157,38 @@ async function fetchMessageDetails(teamId, channelId, messageId) {
   }
 }
 
+function stripHtml(html) {
+  return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+}
+
+async function replyToChannelMessage(teamId, channelId, messageId) {
+  const token = await getAccessToken();
+  const url = `https://graph.microsoft.com/v1.0/teams/${teamId}/channels/${channelId}/messages/${messageId}/replies`;
+
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
+  };
+
+  const body = {
+    body: {
+      content: "Thank you!",
+    },
+  };
+
+  try {
+    await axios.post(url, body, { headers });
+    console.log("✅ Replied with 'Thank you!'");
+  } catch (err) {
+    console.error("❌ Error sending reply:", err.response?.data || err.message);
+  }
+}
+
+
 async function saveMessageToDB(messageData) {
+  const rawContent = messageData.body?.content || '';
+  const plainText = stripHtml(rawContent);
+
   const text = `
     INSERT INTO message_store(id, content, created_at)
     VALUES($1, $2, $3)
@@ -165,13 +196,13 @@ async function saveMessageToDB(messageData) {
   `;
   const values = [
     messageData.id,
-    messageData.body?.content || '',
+    plainText,
     messageData.createdDateTime,
   ];
 
   try {
     await pool.query(text, values);
-    console.log('Message saved or already exists:', messageData.id);
+    console.log('Message saved:', plainText);
   } catch (err) {
     console.error('DB insert error:', err.message);
   }
@@ -220,6 +251,13 @@ export default async function handler(req, res) {
        const fullMessage = await fetchMessageDetails(teamId, channelId, messageId);
        await saveMessageToDB(fullMessage);
        console.log('Message saved:', fullMessage.body?.content);
+       if (!fullMessage) {
+            console.log("message is not recieved")
+             
+             
+       } else {
+             await replyToChannelMessage(teamId, channelId, messageId)
+       }
 
       return res.status(200).send('OK');
     } catch (err) {
