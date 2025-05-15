@@ -334,20 +334,21 @@ async function getToken() {
 
   const res = await fetch(`https://login.microsoftonline.com/${process.env.TENANT_ID}/oauth2/v2.0/token`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
     body: params,
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    }
   });
 
   const data = await res.json();
-  if (data.error) {
-    console.error("Token error:", data.error_description);
-    throw new Error(data.error_description);
+
+  if (!res.ok) {
+    throw new Error(`Token error: ${data.error_description || JSON.stringify(data)}`);
   }
 
   return data.access_token;
 }
+
 
 
 async function getMessage(chatId, messageId, token) {
