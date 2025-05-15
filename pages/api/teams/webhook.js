@@ -264,7 +264,7 @@
 //       console.error('Error processing notification:', err.message);
 //       return res.status(500).send('Internal Server Error');
 //     }
-//   } else {
+//   } else { 
 //     res.status(405).send('Method Not Allowed');
 //   }
 // }
@@ -282,9 +282,15 @@ export default async function handler(req, res) {
     const token = await getToken(); // Get ROPC token again
 
     for (const note of notifications) {
-        const resource = note.resource;
+        // Prefer `note.resource`, fallback to `@odata.id` if undefined
+        const resource = note.resource || note.resourceData?.['@odata.id'];
       
-        // Extract IDs from the format: chats('chat-id')/messages('message-id')
+        if (!resource) {
+          console.error("No resource found in notification:", note);
+          continue;
+        }
+      
+        // Extract IDs using regex
         const chatMatch = resource.match(/chats\('([^']+)'\)/);
         const messageMatch = resource.match(/messages\('([^']+)'\)/);
       
@@ -301,6 +307,7 @@ export default async function handler(req, res) {
       
         await sendThankYou(chatId, token);
       }
+
 
 
     return res.status(202).end();
