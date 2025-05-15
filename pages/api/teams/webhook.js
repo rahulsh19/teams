@@ -328,7 +328,7 @@ async function getToken() {
   params.append("grant_type", "password");
   params.append("client_id", process.env.CLIENT_ID);
   params.append("client_secret", process.env.CLIENT_SECRET);
-  params.append("scope", "https://graph.microsoft.com/.default offline_access openid");
+  params.append("scope", "https://graph.microsoft.com/.default offline_access");
   params.append("username", process.env.USERNAME);
   params.append("password", process.env.PASSWORD);
 
