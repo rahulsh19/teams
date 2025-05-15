@@ -328,18 +328,27 @@ async function getToken() {
   params.append("grant_type", "password");
   params.append("client_id", process.env.CLIENT_ID);
   params.append("client_secret", process.env.CLIENT_SECRET);
-  params.append("scope", "https://graph.microsoft.com/.default");
+  params.append("scope", "Chat.Read Chat.ReadWrite offline_access openid profile");
   params.append("username", process.env.USERNAME);
   params.append("password", process.env.PASSWORD);
 
   const res = await fetch(`https://login.microsoftonline.com/${process.env.TENANT_ID}/oauth2/v2.0/token`, {
     method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
     body: params,
   });
 
   const data = await res.json();
+  if (data.error) {
+    console.error("Token error:", data.error_description);
+    throw new Error(data.error_description);
+  }
+
   return data.access_token;
 }
+
 
 async function getMessage(chatId, messageId, token) {
   console.log("message read function called here")
