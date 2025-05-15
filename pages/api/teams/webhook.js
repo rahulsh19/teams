@@ -270,9 +270,11 @@
 // }
 
 export default async function handler(req, res) {
-  if (req.method === 'GET' && req.query.validationToken) {
-    return res.status(200).send(req.query.validationToken);
-  }
+    if (req.query?.validationToken) {
+        console.log("Validation token received:", req.query.validationToken);
+        res.setHeader('Content-Type', 'text/plain'); // This line is critical
+        return res.status(200).send(req.query.validationToken);
+      }
 
   if (req.method === 'POST') {
     const notifications = req.body.value || [];
