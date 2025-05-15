@@ -284,6 +284,7 @@ export default async function handler(req, res) {
     for (const note of notifications) {
         // Prefer `note.resource`, fallback to `@odata.id` if undefined
         const resource = note.resource || note.resourceData?.['@odata.id'];
+        console.log("resource",resource)
       
         if (!resource) {
           console.error("No resource found in notification:", note);
@@ -293,8 +294,8 @@ export default async function handler(req, res) {
         // Extract IDs using regex
         const chatMatch = resource.match(/chats\('([^']+)'\)/);
         const messageMatch = resource.match(/messages\('([^']+)'\)/);
-        console.log(chatMatch);
-        console.log(messageMatch);
+        console.log("chatMatch",chatMatch);
+        console.log("messageMatch",messageMatch);
       
         if (!chatMatch || !messageMatch) {
           console.error("Missing required IDs", { resource });
@@ -303,12 +304,12 @@ export default async function handler(req, res) {
       
         const chatId = chatMatch[1];
         const messageId = messageMatch[1];
-        console.log(chatId);
-        console.log(messageId);
+        console.log("chatId",chatId);
+        console.log("messageId",messageId);
       
       
         const message = await getMessage(chatId, messageId, token);
-        console.log(message);
+        console.log("messages",message);
         console.log("Received message:", message?.body?.content);
       
         await sendThankYou(chatId, token);
