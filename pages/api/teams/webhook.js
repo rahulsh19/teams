@@ -293,6 +293,8 @@ export default async function handler(req, res) {
         // Extract IDs using regex
         const chatMatch = resource.match(/chats\('([^']+)'\)/);
         const messageMatch = resource.match(/messages\('([^']+)'\)/);
+        console.log(chatMatch);
+        console.log(messageMatch);
       
         if (!chatMatch || !messageMatch) {
           console.error("Missing required IDs", { resource });
@@ -301,8 +303,12 @@ export default async function handler(req, res) {
       
         const chatId = chatMatch[1];
         const messageId = messageMatch[1];
+        console.log(chatId);
+        console.log(messageId);
+      
       
         const message = await getMessage(chatId, messageId, token);
+        console.log(message);
         console.log("Received message:", message?.body?.content);
       
         await sendThankYou(chatId, token);
@@ -335,9 +341,12 @@ async function getToken() {
 }
 
 async function getMessage(chatId, messageId, token) {
+  console.log("message read function called here")
   const res = await fetch(`https://graph.microsoft.com/v1.0/chats/${chatId}/messages/${messageId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
+  console.log("responce",res)
+
 
   return res.ok ? await res.json() : null;
 }
