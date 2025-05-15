@@ -282,15 +282,26 @@ export default async function handler(req, res) {
     const token = await getToken(); // Get ROPC token again
 
     for (const note of notifications) {
-      const resource = note.resource; // e.g., chats/{chat-id}/messages/{message-id}
-      const chatId = resource.split('/')[1];
-      const messageId = resource.split('/')[3];
+        const resource = note.resource;
+      
+        // Extract IDs from the format: chats('chat-id')/messages('message-id')
+        const chatMatch = resource.match(/chats\('([^']+)'\)/);
+        const messageMatch = resource.match(/messages\('([^']+)'\)/);
+      
+        if (!chatMatch || !messageMatch) {
+          console.error("Missing required IDs", { resource });
+          continue;
+        }
+      
+        const chatId = chatMatch[1];
+        const messageId = messageMatch[1];
+      
+        const message = await getMessage(chatId, messageId, token);
+        console.log("Received message:", message?.body?.content);
+      
+        await sendThankYou(chatId, token);
+      }
 
-      const message = await getMessage(chatId, messageId, token);
-      console.log("Received message:", message?.body?.content);
-
-      await sendThankYou(chatId, token);
-    }
 
     return res.status(202).end();
   }
