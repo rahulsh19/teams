@@ -333,7 +333,7 @@ async function getToken() {
   params.append("client_id", process.env.CLIENT_ID);
   params.append("client_secret", process.env.CLIENT_SECRET);
   params.append("scope", "https://graph.microsoft.com/.default offline_access");
-  params.append("username", Rahul.s@neweltechnologies.com);
+  params.append("username", "Rahul.s@neweltechnologies.com");
   params.append("password", process.env.PASSWORD);
 
   const res = await fetch(`https://login.microsoftonline.com/${process.env.TENANT_ID}/oauth2/v2.0/token`, {
