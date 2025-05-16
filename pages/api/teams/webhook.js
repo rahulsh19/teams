@@ -275,6 +275,7 @@ export default async function handler(req, res) {
         res.setHeader('Content-Type', 'text/plain'); // This line is critical
         return res.status(200).send(req.query.validationToken);
       }
+
   if (req.method === 'POST') {
     const notifications = req.body.value || [];
 
@@ -283,7 +284,6 @@ export default async function handler(req, res) {
     for (const note of notifications) {
         // Prefer `note.resource`, fallback to `@odata.id` if undefined
         const resource = note.resource || note.resourceData?.['@odata.id'];
-        console.log("resource",resource)
       
         if (!resource) {
           console.error("No resource found in notification:", note);
@@ -293,8 +293,8 @@ export default async function handler(req, res) {
         // Extract IDs using regex
         const chatMatch = resource.match(/chats\('([^']+)'\)/);
         const messageMatch = resource.match(/messages\('([^']+)'\)/);
-        console.log("chatMatch",chatMatch);
-        console.log("messageMatch",messageMatch);
+        console.log(chatMatch);
+        console.log(messageMatch);
       
         if (!chatMatch || !messageMatch) {
           console.error("Missing required IDs", { resource });
@@ -303,12 +303,12 @@ export default async function handler(req, res) {
       
         const chatId = chatMatch[1];
         const messageId = messageMatch[1];
-        console.log("chatId",chatId);
-        console.log("messageId",messageId);
+        console.log(chatId);
+        console.log(messageId);
       
       
         const message = await getMessage(chatId, messageId, token);
-        console.log("messages",message);
+        console.log(message);
         console.log("Received message:", message?.body?.content);
       
         await sendThankYou(chatId, token);
@@ -323,39 +323,22 @@ export default async function handler(req, res) {
 }
 
 async function getToken() {
-
-  console.log("CLIENT_ID:", process.env.CLIENT_ID);
-  console.log("USERNAME:", process.env.USERNAME);
-  console.log("TENANT_ID:", process.env.TENANT_ID);
-
   const params = new URLSearchParams();
   params.append("grant_type", "password");
   params.append("client_id", process.env.CLIENT_ID);
   params.append("client_secret", process.env.CLIENT_SECRET);
-  params.append("scope", "https://graph.microsoft.com/.default offline_access");
-  params.append("username", "Rahul.s@neweltechnologies.com");
-  params.append("password", "Luhar@4495");
-
-  console.log(params,"params");
+  params.append("scope", "https://graph.microsoft.com/.default");
+  params.append("username", process.env.USERNAME);
+  params.append("password", process.env.PASSWORD);
 
   const res = await fetch(`https://login.microsoftonline.com/${process.env.TENANT_ID}/oauth2/v2.0/token`, {
     method: "POST",
     body: params,
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded"
-    }
   });
 
   const data = await res.json();
-
-  if (!res.ok) {
-    throw new Error(`Token error: ${data.error_description || JSON.stringify(data)}`);
-  }
-
   return data.access_token;
 }
-
-
 
 async function getMessage(chatId, messageId, token) {
   console.log("message read function called here")
