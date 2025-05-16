@@ -269,6 +269,7 @@
 //   }
 // }
 
+import fetch from "node-fetch";
 export default async function handler(req, res) {
     if (req.query?.validationToken) {
         console.log("Validation token received:", req.query.validationToken);
@@ -322,6 +323,8 @@ export default async function handler(req, res) {
   res.status(405).end(); // Method not allowed
 }
 
+import fetch from "node-fetch"; // Ensure you're using node-fetch in Node.js
+
 async function getToken() {
   const params = new URLSearchParams();
   params.append("grant_type", "password");
@@ -331,17 +334,24 @@ async function getToken() {
   params.append("username", "Rahul.s@neweltechnologies.com");
   params.append("password", "Luhar@4495");
 
-  console.log(params,"params")
-
   const res = await fetch(`https://login.microsoftonline.com/${process.env.TENANT_ID}/oauth2/v2.0/token`, {
     method: "POST",
-    body: params,
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: params.toString(),
   });
-  console.log(res,"response")
 
   const data = await res.json();
+  console.log(data);
+
+  if (!res.ok) {
+    throw new Error(`Token request failed: ${data.error_description || res.statusText}`);
+  }
+
   return data.access_token;
 }
+
 
 async function getMessage(chatId, messageId, token) {
   console.log("message read function called here")
