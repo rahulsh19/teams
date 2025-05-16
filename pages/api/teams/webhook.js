@@ -269,78 +269,6 @@
 //   }
 // }
 
-export default async function handler(req, res) {
-    if (req.query?.validationToken) {
-        console.log("Validation token received:", req.query.validationToken);
-        res.setHeader('Content-Type', 'text/plain'); // This line is critical
-        return res.status(200).send(req.query.validationToken);
-      }
-  if (req.method === 'POST') {
-    const notifications = req.body.value || [];
-
-    const token = await getToken(); // Get ROPC token again
-
-    for (const note of notifications) {
-        // Prefer `note.resource`, fallback to `@odata.id` if undefined
-        const resource = note.resource || note.resourceData?.['@odata.id'];
-        console.log("resource",resource)
-      
-        if (!resource) {
-          console.error("No resource found in notification:", note);
-          continue;
-        }
-      
-        // Extract IDs using regex
-        const chatMatch = resource.match(/chats\('([^']+)'\)/);
-        const messageMatch = resource.match(/messages\('([^']+)'\)/);
-        console.log("chatMatch",chatMatch);
-        console.log("messageMatch",messageMatch);
-      
-        if (!chatMatch || !messageMatch) {
-          console.error("Missing required IDs", { resource });
-          continue;
-        }
-      
-        const chatId = chatMatch[1];
-        const messageId = messageMatch[1];
-        console.log("chatId",chatId);
-        console.log("messageId",messageId);
-      
-      
-        const message = await getMessage(chatId, messageId, token);
-        console.log("messages",message);
-        console.log("Received message:", message?.body?.content);
-      
-        await sendThankYou(chatId, token);
-      }
-
-
-
-    return res.status(202).end();
-  }
-
-  res.status(405).end(); // Method not allowed
-}
-
-async function getToken() {
-
-  console.log("CLIENT_ID:", process.env.CLIENT_ID);
-  console.log("USERNAME:", process.env.USERNAME);
-  console.log("TENANT_ID:", process.env.TENANT_ID);
-
-  const params = new URLSearchParams();
-  params.append("grant_type", "password");
-  params.append("client_id", process.env.CLIENT_ID);
-  params.append("client_secret", process.env.CLIENT_SECRET);
-  params.append("scope", "https://graph.microsoft.com/.default offline_access");
-  params.append("username", "Rahul.s@neweltechnologies.com");
-  params.append("password", "Luhar@4495");
-
-  console.log(params, 'user param')    
-
-  const res = await fetch(`https://login.microsoftonline.com/${process.env.TENANT_ID}/oauth2/v2.0/token`, {
-    method: "POST",
-    body: params,
     headers: {
       "Content-Type": "application/x-www-form-urlencoded"
     }
@@ -378,4 +306,3 @@ async function sendThankYou(chatId, token) {
     body: JSON.stringify({ body: { content: "Thank you" } }),
   });
 }
-
