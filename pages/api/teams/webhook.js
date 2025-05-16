@@ -293,8 +293,8 @@ export default async function handler(req, res) {
         // Extract IDs using regex
         const chatMatch = resource.match(/chats\('([^']+)'\)/);
         const messageMatch = resource.match(/messages\('([^']+)'\)/);
-        console.log(chatMatch);
-        console.log(messageMatch);
+        console.log(chatMatch,"chatmatch");
+        console.log(messageMatch,"messagematch");
       
         if (!chatMatch || !messageMatch) {
           console.error("Missing required IDs", { resource });
@@ -303,12 +303,12 @@ export default async function handler(req, res) {
       
         const chatId = chatMatch[1];
         const messageId = messageMatch[1];
-        console.log(chatId);
-        console.log(messageId);
+        console.log(chatId, "chatID");
+        console.log(messageId,"messageID");
       
       
         const message = await getMessage(chatId, messageId, token);
-        console.log(message);
+        console.log(message, "message");
         console.log("Received message:", message?.body?.content);
       
         await sendThankYou(chatId, token);
@@ -327,14 +327,17 @@ async function getToken() {
   params.append("grant_type", "password");
   params.append("client_id", process.env.CLIENT_ID);
   params.append("client_secret", process.env.CLIENT_SECRET);
-  params.append("scope", "https://graph.microsoft.com/.default");
-  params.append("username", process.env.USERNAME);
-  params.append("password", process.env.PASSWORD);
+  params.append("scope", "https://graph.microsoft.com/.default offline_access openid");
+  params.append("username", "Rahul.s@neweltechnologies.com");
+  params.append("password", "Luhar@4495");
+
+  console.log(params,"params")
 
   const res = await fetch(`https://login.microsoftonline.com/${process.env.TENANT_ID}/oauth2/v2.0/token`, {
     method: "POST",
     body: params,
   });
+  console.log(res,"response")
 
   const data = await res.json();
   return data.access_token;
