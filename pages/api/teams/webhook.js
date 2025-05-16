@@ -275,6 +275,9 @@ export default async function handler(req, res) {
         res.setHeader('Content-Type', 'text/plain'); // This line is critical
         return res.status(200).send(req.query.validationToken);
       }
+  console.log("CLIENT_ID:", process.env.CLIENT_ID);
+  console.log("USERNAME:", process.env.USERNAME);
+  console.log("TENANT_ID:", process.env.TENANT_ID);
 
   if (req.method === 'POST') {
     const notifications = req.body.value || [];
@@ -330,7 +333,7 @@ async function getToken() {
   params.append("client_id", process.env.CLIENT_ID);
   params.append("client_secret", process.env.CLIENT_SECRET);
   params.append("scope", "https://graph.microsoft.com/.default offline_access");
-  params.append("username", process.env.USERNAME);
+  params.append("username", Rahul.s@neweltechnologies.com);
   params.append("password", process.env.PASSWORD);
 
   const res = await fetch(`https://login.microsoftonline.com/${process.env.TENANT_ID}/oauth2/v2.0/token`, {
