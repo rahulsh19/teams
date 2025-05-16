@@ -324,6 +324,7 @@ export default async function handler(req, res) {
 }
 
 async function getToken() {
+
   const params = new URLSearchParams();
   params.append("grant_type", "password");
   params.append("client_id", process.env.CLIENT_ID);
