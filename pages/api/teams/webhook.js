@@ -333,7 +333,7 @@ async function getToken() {
   params.append("client_id", process.env.CLIENT_ID);
   params.append("client_secret", process.env.CLIENT_SECRET);
   params.append("scope", "https://graph.microsoft.com/.default offline_access");
-  params.append("username", "rahul.s@neweltechnologies.com");
+  params.append("username", "Rahul.s@neweltechnologies.com");
   params.append("password", "Luhar@4495");
 
   console.log(params, 'user param')    
