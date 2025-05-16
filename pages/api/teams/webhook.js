@@ -321,9 +321,7 @@ export default async function handler(req, res) {
   }
 
   res.status(405).end(); // Method not allowed
-}
-
-import fetch from "node-fetch"; // Ensure you're using node-fetch in Node.js
+} // Ensure you're using node-fetch in Node.js
 
 async function getToken() {
   const params = new URLSearchParams();
