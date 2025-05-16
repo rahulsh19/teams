@@ -275,10 +275,6 @@ export default async function handler(req, res) {
         res.setHeader('Content-Type', 'text/plain'); // This line is critical
         return res.status(200).send(req.query.validationToken);
       }
-  console.log("CLIENT_ID:", process.env.CLIENT_ID);
-  console.log("USERNAME:", process.env.USERNAME);
-  console.log("TENANT_ID:", process.env.TENANT_ID);
-
   if (req.method === 'POST') {
     const notifications = req.body.value || [];
 
@@ -327,6 +323,10 @@ export default async function handler(req, res) {
 }
 
 async function getToken() {
+
+  console.log("CLIENT_ID:", process.env.CLIENT_ID);
+  console.log("USERNAME:", process.env.USERNAME);
+  console.log("TENANT_ID:", process.env.TENANT_ID);
 
   const params = new URLSearchParams();
   params.append("grant_type", "password");
