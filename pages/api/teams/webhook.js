@@ -307,11 +307,11 @@ export default async function handler(req, res) {
         }
       
         console.log("Received message:", message.body?.content);
-        console.log("From:", message.from?.user?.userPrincipalName || "Unknown");
+        console.log("From:", message.from?.user?.displayName || "Unknown");
       
         // ✅ Validate sender email
-        const senderEmail = message.from?.user?.userPrincipalName;
-        if (senderEmail !== "rahul.s@neweltechnologies.com") {
+        const senderEmail = message.from?.user?.displayName;
+        if (senderEmail !== "Rahul Shinde") {
           console.log(`Skipping reply: message not from expected sender (${senderEmail})`);
           continue;
         }
