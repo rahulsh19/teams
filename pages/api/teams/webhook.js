@@ -269,110 +269,110 @@
 // //   }
 // // }
 
-// import fetch from "node-fetch";
-// export default async function handler(req, res) {
-//     if (req.query?.validationToken) {
-//         console.log("Validation token received:", req.query.validationToken);
-//         res.setHeader('Content-Type', 'text/plain'); // This line is critical
-//         return res.status(200).send(req.query.validationToken);
-//       }
+import fetch from "node-fetch";
+export default async function handler(req, res) {
+    if (req.query?.validationToken) {
+        console.log("Validation token received:", req.query.validationToken);
+        res.setHeader('Content-Type', 'text/plain'); // This line is critical
+        return res.status(200).send(req.query.validationToken);
+      }
 
-//   if (req.method === 'POST') {
-//     const notifications = req.body.value || [];
+  if (req.method === 'POST') {
+    const notifications = req.body.value || [];
 
-//     const token = await getToken(); // Get ROPC token again
+    const token = await getToken(); // Get ROPC token again
 
-//     for (const note of notifications) {
-//         const resource = note.resource || note.resourceData?.['@odata.id'];
-//         if (!resource) {
-//           console.error("No resource found in notification:", note);
-//           continue;
-//         }
+    for (const note of notifications) {
+        const resource = note.resource || note.resourceData?.['@odata.id'];
+        if (!resource) {
+          console.error("No resource found in notification:", note);
+          continue;
+        }
       
-//         const chatMatch = resource.match(/chats\('([^']+)'\)/);
-//         const messageMatch = resource.match(/messages\('([^']+)'\)/);
+        const chatMatch = resource.match(/chats\('([^']+)'\)/);
+        const messageMatch = resource.match(/messages\('([^']+)'\)/);
       
-//         if (!chatMatch || !messageMatch) {
-//           console.error("Missing required IDs", { resource });
-//           continue;
-//         }
+        if (!chatMatch || !messageMatch) {
+          console.error("Missing required IDs", { resource });
+          continue;
+        }
       
-//         const chatId = chatMatch[1];
-//         const messageId = messageMatch[1];
+        const chatId = chatMatch[1];
+        const messageId = messageMatch[1];
       
-//         const message = await getMessage(chatId, messageId, token);
-//         if (!message) {
-//           console.error("Message fetch failed for", chatId, messageId);
-//           continue;
-//         }
+        const message = await getMessage(chatId, messageId, token);
+        if (!message) {
+          console.error("Message fetch failed for", chatId, messageId);
+          continue;
+        }
       
-//         console.log("Received message:", message.body?.content);
-//         console.log("From:", message.from?.user?.displayName || "Unknown");
+        console.log("Received message:", message.body?.content);
+        console.log("From:", message.from?.user?.displayName || "Unknown");
       
-//         // ✅ Validate sender email
-//         const senderEmail = message.from?.user?.displayName;
-//         if (senderEmail !== "Rahul Shinde") {
-//           console.log(`Skipping reply: message not from expected sender (${senderEmail})`);
-//           continue;
-//         }
+        // ✅ Validate sender email
+        const senderEmail = message.from?.user?.displayName;
+        if (senderEmail !== "Rahul Shinde") {
+          console.log(`Skipping reply: message not from expected sender (${senderEmail})`);
+          continue;
+        }
       
-//         await sendThankYou(chatId, token);
-//       }
+        await sendThankYou(chatId, token);
+      }
       
 
 
-//     return res.status(202).end();
-//   }
+    return res.status(202).end();
+  }
 
-//   res.status(405).end(); // Method not allowed
-// } // Ensure you're using node-fetch in Node.js
+  res.status(405).end(); // Method not allowed
+} // Ensure you're using node-fetch in Node.js
 
-// async function getToken() {
-//   const params = new URLSearchParams();
-//   params.append("grant_type", "password");
-//   params.append("client_id", process.env.CLIENT_ID);
-//   params.append("client_secret", process.env.CLIENT_SECRET);
-//   params.append("scope", "https://graph.microsoft.com/.default offline_access openid");
-//   params.append("username", "Rahul.s@neweltechnologies.com");
-//   params.append("password", "Luhar@4495");
+async function getToken() {
+  const params = new URLSearchParams();
+  params.append("grant_type", "password");
+  params.append("client_id", process.env.CLIENT_ID);
+  params.append("client_secret", process.env.CLIENT_SECRET);
+  params.append("scope", "https://graph.microsoft.com/.default offline_access openid");
+  params.append("username", "Rahul.s@neweltechnologies.com");
+  params.append("password", "Luhar@4495");
 
-//   const res = await fetch(`https://login.microsoftonline.com/${process.env.TENANT_ID}/oauth2/v2.0/token`, {
-//     method: "POST",
-//     headers: {
-//       "Content-Type": "application/x-www-form-urlencoded",
-//     },
-//     body: params.toString(),
-//   });
+  const res = await fetch(`https://login.microsoftonline.com/${process.env.TENANT_ID}/oauth2/v2.0/token`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: params.toString(),
+  });
 
-//   const data = await res.json();
-//   console.log(data);
+  const data = await res.json();
+  console.log(data);
 
-//   if (!res.ok) {
-//     throw new Error(`Token request failed: ${data.error_description || res.statusText}`);
-//   }
+  if (!res.ok) {
+    throw new Error(`Token request failed: ${data.error_description || res.statusText}`);
+  }
 
-//   return data.access_token;
-// }
-
-
-// async function getMessage(chatId, messageId, token) {
-//   console.log("message read function called here")
-//   const res = await fetch(`https://graph.microsoft.com/v1.0/chats/${chatId}/messages/${messageId}`, {
-//     headers: { Authorization: `Bearer ${token}` },
-//   });
-//   console.log("responce",res)
+  return data.access_token;
+}
 
 
-//   return res.ok ? await res.json() : null;
-// }
+async function getMessage(chatId, messageId, token) {
+  console.log("message read function called here")
+  const res = await fetch(`https://graph.microsoft.com/v1.0/chats/${chatId}/messages/${messageId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  console.log("responce",res)
 
-// async function sendThankYou(chatId, token) {
-//   await fetch(`https://graph.microsoft.com/v1.0/chats/${chatId}/messages`, {
-//     method: "POST",
-//     headers: {
-//       Authorization: `Bearer ${token}`,
-//       "Content-Type": "application/json",
-//     },
-//     body: JSON.stringify({ body: { content: "Thank you" } }),
-//   });
-// }
+
+  return res.ok ? await res.json() : null;
+}
+
+async function sendThankYou(chatId, token) {
+  await fetch(`https://graph.microsoft.com/v1.0/chats/${chatId}/messages`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ body: { content: "Thank you" } }),
+  });
+}
