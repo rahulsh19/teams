@@ -272,6 +272,7 @@
 import fetch from "node-fetch";
 export default async function handler(req, res) {
     console.log("Webhook hit: method =", req.method);
+    console.log("Webhook hit: body =", req.body);
     if (req.query?.validationToken) {
         console.log("Validation token received:", req.query.validationToken);
         res.setHeader('Content-Type', 'text/plain'); // This line is critical
