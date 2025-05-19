@@ -283,19 +283,14 @@ export default async function handler(req, res) {
     const token = await getToken(); // Get ROPC token again
 
     for (const note of notifications) {
-        // Prefer `note.resource`, fallback to `@odata.id` if undefined
         const resource = note.resource || note.resourceData?.['@odata.id'];
-      
         if (!resource) {
           console.error("No resource found in notification:", note);
           continue;
         }
       
-        // Extract IDs using regex
         const chatMatch = resource.match(/chats\('([^']+)'\)/);
         const messageMatch = resource.match(/messages\('([^']+)'\)/);
-        console.log(chatMatch,"chatmatch");
-        console.log(messageMatch,"messagematch");
       
         if (!chatMatch || !messageMatch) {
           console.error("Missing required IDs", { resource });
@@ -304,17 +299,26 @@ export default async function handler(req, res) {
       
         const chatId = chatMatch[1];
         const messageId = messageMatch[1];
-        console.log(chatId, "chatID");
-        console.log(messageId,"messageID");
-      
       
         const message = await getMessage(chatId, messageId, token);
-        console.log(message, "message");
-        console.log("Received message:", message?.body?.content);
+        if (!message) {
+          console.error("Message fetch failed for", chatId, messageId);
+          continue;
+        }
+      
+        console.log("Received message:", message.body?.content);
+        console.log("From:", message.from?.user?.userPrincipalName || "Unknown");
+      
+        // ✅ Validate sender email
+        const senderEmail = message.from?.user?.userPrincipalName;
+        if (senderEmail !== "rahul.s@neweltechnologies.com") {
+          console.log(`Skipping reply: message not from expected sender (${senderEmail})`);
+          continue;
+        }
       
         await sendThankYou(chatId, token);
       }
-
+      
 
 
     return res.status(202).end();
