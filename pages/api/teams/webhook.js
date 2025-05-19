@@ -290,6 +290,7 @@ async function buffer(readable) {
 
 export default async function handler(req, res) {
   console.log("Webhook hit: method =", req.method);
+  console.log("Webhook hit: body =", req.body);
 
   // ✅ Handle Microsoft Graph validation (GET with ?validationToken=...)
   if (req.query?.validationToken) {
