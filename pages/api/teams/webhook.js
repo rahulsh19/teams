@@ -311,7 +311,7 @@ export default async function handler(req, res) {
       
         // ✅ Validate sender email
         const senderEmail = message.from?.user?.displayName;
-        if (senderEmail !== "Rahul Shinde") {
+        if (senderEmail === "Rahul Shinde") {
           console.log(`Skipping reply: message not from expected sender (${senderEmail})`);
           continue;
         }
