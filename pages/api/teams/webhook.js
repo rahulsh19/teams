@@ -270,65 +270,91 @@
 // // }
 
 import fetch from "node-fetch";
+import { Readable } from "stream";
+
+// Disable automatic body parsing (required for Graph validation + raw body)
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+// Helper: buffer the request stream
+async function buffer(readable) {
+  const chunks = [];
+  for await (const chunk of readable) {
+    chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
+  }
+  return Buffer.concat(chunks);
+}
+
 export default async function handler(req, res) {
-    console.log("Webhook hit: method =", req.method);
-    console.log("Webhook hit: body =", req.body);
-    if (req.query?.validationToken) {
-        console.log("Validation token received:", req.query.validationToken);
-        res.setHeader('Content-Type', 'text/plain'); // This line is critical
-        return res.status(200).send(req.query.validationToken);
-      }
+  console.log("Webhook hit: method =", req.method);
 
-  if (req.method === 'POST') {
-    
-    const notifications = req.body.value || [];
+  // ✅ Handle Microsoft Graph validation (GET with ?validationToken=...)
+  if (req.query?.validationToken) {
+    console.log("Validation token received:", req.query.validationToken);
+    res.setHeader("Content-Type", "text/plain");
+    return res.status(200).send(req.query.validationToken);
+  }
 
-    const token = await getToken(); // Get ROPC token again
+  if (req.method === "POST") {
+    const rawBody = await buffer(req);
+    let body = {};
+
+    try {
+      body = JSON.parse(rawBody.toString());
+    } catch (err) {
+      console.error("Error parsing body:", err);
+      return res.status(400).send("Invalid JSON");
+    }
+
+    console.log("Webhook hit: body =", body);
+
+    const notifications = body.value || [];
+    const token = await getToken(); // Get ROPC token
 
     for (const note of notifications) {
-        const resource = note.resource || note.resourceData?.['@odata.id'];
-        if (!resource) {
-          console.error("No resource found in notification:", note);
-          continue;
-        }
-      
-        const chatMatch = resource.match(/chats\('([^']+)'\)/);
-        const messageMatch = resource.match(/messages\('([^']+)'\)/);
-      
-        if (!chatMatch || !messageMatch) {
-          console.error("Missing required IDs", { resource });
-          continue;
-        }
-      
-        const chatId = chatMatch[1];
-        const messageId = messageMatch[1];
-      
-        const message = await getMessage(chatId, messageId, token);
-        if (!message) {
-          console.error("Message fetch failed for", chatId, messageId);
-          continue;
-        }
-      
-        console.log("Received message:", message.body?.content);
-        console.log("From:", message.from?.user?.displayName || "Unknown");
-      
-        // ✅ Validate sender email
-        const senderEmail = message.from?.user?.displayName;
-        if (senderEmail === "Rahul Shinde") {
-          console.log(`Skipping reply: message not from expected sender (${senderEmail})`);
-          continue;
-        }
-      
-        await sendThankYou(chatId, token);
+      const resource = note.resource || note.resourceData?.["@odata.id"];
+      if (!resource) {
+        console.error("No resource found in notification:", note);
+        continue;
       }
-      
 
+      const chatMatch = resource.match(/chats\('([^']+)'\)/);
+      const messageMatch = resource.match(/messages\('([^']+)'\)/);
+
+      if (!chatMatch || !messageMatch) {
+        console.error("Missing required IDs", { resource });
+        continue;
+      }
+
+      const chatId = chatMatch[1];
+      const messageId = messageMatch[1];
+
+      const message = await getMessage(chatId, messageId, token);
+      if (!message) {
+        console.error("Message fetch failed for", chatId, messageId);
+        continue;
+      }
+
+      console.log("Received message:", message.body?.content);
+      console.log("From:", message.from?.user?.displayName || "Unknown");
+
+      const sender = message.from?.user?.displayName;
+      if (sender === "Rahul Shinde") {
+        console.log(`Skipping reply: message from self (${sender})`);
+        continue;
+      }
+
+      await sendThankYou(chatId, token);
+    }
 
     return res.status(202).end();
   }
 
   res.status(405).end(); // Method not allowed
-} // Ensure you're using node-fetch in Node.js
+}
 
 async function getToken() {
   const params = new URLSearchParams();
@@ -336,20 +362,16 @@ async function getToken() {
   params.append("client_id", process.env.CLIENT_ID);
   params.append("client_secret", process.env.CLIENT_SECRET);
   params.append("scope", "https://graph.microsoft.com/.default offline_access openid");
-  params.append("username", "Rahul.s@neweltechnologies.com");
-  params.append("password", "Luhar@4495");
+  params.append("username", process.env.ROPC_USERNAME);
+  params.append("password", process.env.ROPC_PASSWORD);
 
   const res = await fetch(`https://login.microsoftonline.com/${process.env.TENANT_ID}/oauth2/v2.0/token`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: params.toString(),
   });
 
   const data = await res.json();
-  console.log(data);
-
   if (!res.ok) {
     throw new Error(`Token request failed: ${data.error_description || res.statusText}`);
   }
@@ -357,19 +379,17 @@ async function getToken() {
   return data.access_token;
 }
 
-
 async function getMessage(chatId, messageId, token) {
-  console.log("message read function called here")
+  console.log("Fetching message:", chatId, messageId);
   const res = await fetch(`https://graph.microsoft.com/v1.0/chats/${chatId}/messages/${messageId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  console.log("responce",res)
-
 
   return res.ok ? await res.json() : null;
 }
 
 async function sendThankYou(chatId, token) {
+  console.log("Sending thank you to chat:", chatId);
   await fetch(`https://graph.microsoft.com/v1.0/chats/${chatId}/messages`, {
     method: "POST",
     headers: {
