@@ -273,6 +273,7 @@ import fetch from "node-fetch";
 export default async function handler(req, res) {
     if (req.query?.validationToken) {
         console.log("Validation token received:", req.query.validationToken);
+        console.log("res",res);
         res.setHeader('Content-Type', 'text/plain'); // This line is critical
         return res.status(200).send(req.query.validationToken);
       }
