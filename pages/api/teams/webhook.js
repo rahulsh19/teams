@@ -270,93 +270,62 @@
 // // }
 
 import fetch from "node-fetch";
-import { Readable } from "stream";
-
-// Disable automatic body parsing (required for Graph validation + raw body)
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
-// Helper: buffer the request stream
-async function buffer(readable) {
-  const chunks = [];
-  for await (const chunk of readable) {
-    chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
-  }
-  return Buffer.concat(chunks);
-}
-
 export default async function handler(req, res) {
-  console.log("Webhook hit: method =", req.method);
-  console.log("Webhook hit: body =", req.body);
+    if (req.query?.validationToken) {
+        console.log("Validation token received:", req.query.validationToken);
+        res.setHeader('Content-Type', 'text/plain'); // This line is critical
+        return res.status(200).send(req.query.validationToken);
+      }
 
-  // ✅ Handle Microsoft Graph validation (GET with ?validationToken=...)
-  if (req.query?.validationToken) {
-    console.log("Validation token received:", req.query.validationToken);
-    res.setHeader("Content-Type", "text/plain");
-    return res.status(200).send(req.query.validationToken);
-  }
+  if (req.method === 'POST') {
+    const notifications = req.body.value || [];
 
-  if (req.method === "POST") {
-    const rawBody = await buffer(req);
-    let body = {};
-
-    try {
-      body = JSON.parse(rawBody.toString());
-    } catch (err) {
-      console.error("Error parsing body:", err);
-      return res.status(400).send("Invalid JSON");
-    }
-
-    console.log("Webhook hit: body =", body);
-
-    const notifications = body.value || [];
-    // const token = await getToken(); // Get ROPC token
-       const token = "eyJ0eXAiOiJKV1QiLCJub25jZSI6Im1iUFhtZzJHdFU2ZW8zTWlOaGRMX2hadk5xYmF0dmhTVV9uWG04dkllLW8iLCJhbGciOiJSUzI1NiIsIng1dCI6IkNOdjBPSTNSd3FsSEZFVm5hb01Bc2hDSDJYRSIsImtpZCI6IkNOdjBPSTNSd3FsSEZFVm5hb01Bc2hDSDJYRSJ9.eyJhdWQiOiJodHRwczovL2dyYXBoLm1pY3Jvc29mdC5jb20iLCJpc3MiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC82YmEyNjRiOC1lMmZlLTQ2MGEtYmJiNC01NzFiNTIxYzYwMzcvIiwiaWF0IjoxNzQ3NjU4ODMxLCJuYmYiOjE3NDc2NTg4MzEsImV4cCI6MTc0NzY2Mjg3MiwiYWNjdCI6MCwiYWNyIjoiMSIsImFpbyI6IkFYUUFpLzhaQUFBQW0zR2dTUS9KclZ0dHdKVXhrQjA4Q0lpM25IV0hmRWNaYUg5NVMvNTU2T1hBamRzbHVnRE1yZC8zRzlRNXBlU0dPcUV0MkJGZVNVakZMYlN0VWdUNG1xL2w5cWV3bVFhZmwvSUxOejNCcHBzRklSU2ZTREZETDA2OGdXZnJ0UXo3eEhUQk9SazhRZ2FMTXo0TFlaWDlrUT09IiwiYW1yIjpbInB3ZCJdLCJhcHBfZGlzcGxheW5hbWUiOiJuZXdlbC10ZWFtcyIsImFwcGlkIjoiNGYzZTM3YTItMWI3ZC00ZDc5LWFkZDctMmE5N2U4MmYzNzNiIiwiYXBwaWRhY3IiOiIxIiwiZmFtaWx5X25hbWUiOiJTaGluZGUiLCJnaXZlbl9uYW1lIjoiUmFodWwiLCJpZHR5cCI6InVzZXIiLCJpcGFkZHIiOiIxMTAuMjI2LjE4MS44MiIsIm5hbWUiOiJSYWh1bCBTaGluZGUiLCJvaWQiOiIxMzU1NmY1MS00MWFlLTRiNjktOGRmYy1lOGFmYzMwNmNjMWQiLCJwbGF0ZiI6IjE0IiwicHVpZCI6IjEwMDMyMDA0ODY1QUFGRjYiLCJyaCI6IjEuQVhFQXVHU2lhXzdpQ2thN3RGY2JVaHhnTndNQUFBQUFBQUFBd0FBQUFBQUFBQUF2QVhGeEFBLiIsInNjcCI6IkNoYW5uZWxNZXNzYWdlLlNlbmQgQ2hhdC5SZWFkIENoYXQuUmVhZFdyaXRlIENoYXQuUmVhZFdyaXRlLkFsbCBDaGF0TWVzc2FnZS5TZW5kIEdyb3VwLlJlYWQuQWxsIG9wZW5pZCBwcm9maWxlIFVzZXIuUmVhZCBlbWFpbCIsInNpZCI6IjAwNGYzOTU5LTNiNmQtZTExZS1mZjA5LWY4YzEyNGEyMmNkZSIsInN1YiI6IlA3UzRBeGI1NC12MjBiTzQwTUIyTk15WTBRMmtUbmdzWkdPdnBYemEzdzAiLCJ0ZW5hbnRfcmVnaW9uX3Njb3BlIjoiQVMiLCJ0aWQiOiI2YmEyNjRiOC1lMmZlLTQ2MGEtYmJiNC01NzFiNTIxYzYwMzciLCJ1bmlxdWVfbmFtZSI6IlJhaHVsLnNAbmV3ZWx0ZWNobm9sb2dpZXMuY29tIiwidXBuIjoiUmFodWwuc0BuZXdlbHRlY2hub2xvZ2llcy5jb20iLCJ1dGkiOiJWcDgyQkJFNmkwbXNYRjhDMl9zekFBIiwidmVyIjoiMS4wIiwid2lkcyI6WyJiNzlmYmY0ZC0zZWY5LTQ2ODktODE0My03NmIxOTRlODU1MDkiXSwieG1zX2lkcmVsIjoiMSA2IiwieG1zX3N0Ijp7InN1YiI6IlBCN1NHOGRZNV9EZHlnRVgwejdHX1Z1VlY3ZWNUanVBc1ZLSi16YTFBWDAifSwieG1zX3RjZHQiOjE2MjE2NzU0MDV9.YRyZFimlZm0R9_H0zng9jCGWtulM4i1xdlxGOw3jNYuMAikSTZ102bsBYg5o6TcDcwsRF57N1b2VsDLz1zjSt-RcnLVVjsfmPjqmDUMze6_wbaVFvNo8-udgQaEQtDRGKAziVBjjTdr5HckbExnGigEphuY3hmNizwkvBwKkiFkIvzEZ26zlsc_myBW5KIyDpN-kbRWyjwW1DemjdTPqVPg_5nhJRcjNfVSnUBdfj_59AWsG9x7ehOjlI29GIVLKW2PqmMkl2CfyL8SYnDwY9l_iyLL6hgCvNL48QTbqFxsdSiKEM6X7gwkQxoUgheWCJH7-N2dvrWMec-NfkRiMpw";
+    const token = await getToken(); // Get ROPC token again
 
     for (const note of notifications) {
-      const resource = note.resource || note.resourceData?.["@odata.id"];
-      if (!resource) {
-        console.error("No resource found in notification:", note);
-        continue;
+        const resource = note.resource || note.resourceData?.['@odata.id'];
+        if (!resource) {
+          console.error("No resource found in notification:", note);
+          continue;
+        }
+      
+        const chatMatch = resource.match(/chats\('([^']+)'\)/);
+        const messageMatch = resource.match(/messages\('([^']+)'\)/);
+      
+        if (!chatMatch || !messageMatch) {
+          console.error("Missing required IDs", { resource });
+          continue;
+        }
+      
+        const chatId = chatMatch[1];
+        const messageId = messageMatch[1];
+      
+        const message = await getMessage(chatId, messageId, token);
+        if (!message) {
+          console.error("Message fetch failed for", chatId, messageId);
+          continue;
+        }
+      
+        console.log("Received message:", message.body?.content);
+        console.log("From:", message.from?.user?.displayName || "Unknown");
+      
+        // ✅ Validate sender email
+        const senderEmail = message.from?.user?.displayName;
+        if (senderEmail === "Rahul Shinde") {
+          console.log(`Skipping reply: message not from expected sender (${senderEmail})`);
+          continue;
+        }
+      
+        await sendThankYou(chatId, token);
       }
+      
 
-      const chatMatch = resource.match(/chats\('([^']+)'\)/);
-      const messageMatch = resource.match(/messages\('([^']+)'\)/);
-
-      if (!chatMatch || !messageMatch) {
-        console.error("Missing required IDs", { resource });
-        continue;
-      }
-
-      const chatId = chatMatch[1];
-      const messageId = messageMatch[1];
-
-      const message = await getMessage(chatId, messageId, token);
-      if (!message) {
-        console.error("Message fetch failed for", chatId, messageId);
-        continue;
-      }
-
-      console.log("Received message:", message.body?.content);
-      console.log("From:", message.from?.user?.displayName || "Unknown");
-
-      const sender = message.from?.user?.displayName;
-      if (sender === "Rahul Shinde") {
-        console.log(`Skipping reply: message from self (${sender})`);
-        continue;
-      }
-
-      await sendThankYou(chatId, token);
-    }
 
     return res.status(202).end();
   }
 
   res.status(405).end(); // Method not allowed
-}
+} // Ensure you're using node-fetch in Node.js
 
 async function getToken() {
   const params = new URLSearchParams();
@@ -364,16 +333,20 @@ async function getToken() {
   params.append("client_id", process.env.CLIENT_ID);
   params.append("client_secret", process.env.CLIENT_SECRET);
   params.append("scope", "https://graph.microsoft.com/.default offline_access openid");
-  params.append("username", process.env.ROPC_USERNAME);
-  params.append("password", process.env.ROPC_PASSWORD);
+  params.append("username", "Rahul.s@neweltechnologies.com");
+  params.append("password", "Luhar@4495");
 
   const res = await fetch(`https://login.microsoftonline.com/${process.env.TENANT_ID}/oauth2/v2.0/token`, {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
     body: params.toString(),
   });
 
   const data = await res.json();
+  console.log(data);
+
   if (!res.ok) {
     throw new Error(`Token request failed: ${data.error_description || res.statusText}`);
   }
@@ -381,17 +354,19 @@ async function getToken() {
   return data.access_token;
 }
 
+
 async function getMessage(chatId, messageId, token) {
-  console.log("Fetching message:", chatId, messageId);
+  console.log("message read function called here")
   const res = await fetch(`https://graph.microsoft.com/v1.0/chats/${chatId}/messages/${messageId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
+  console.log("responce",res)
+
 
   return res.ok ? await res.json() : null;
 }
 
 async function sendThankYou(chatId, token) {
-  console.log("Sending thank you to chat:", chatId);
   await fetch(`https://graph.microsoft.com/v1.0/chats/${chatId}/messages`, {
     method: "POST",
     headers: {
