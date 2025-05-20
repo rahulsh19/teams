@@ -279,6 +279,9 @@ export default async function handler(req, res) {
       }
 
   if (req.method === 'POST') {
+    console.log("body",req.body);
+    console.log("method",req.method);
+
     const notifications = req.body.value || [];
 
     const token = await getToken(); // Get ROPC token again
