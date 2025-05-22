@@ -269,75 +269,99 @@
 // //   }
 // // }
 
+
 import fetch from "node-fetch";
+
+
 export default async function handler(req, res) {
-    if (req.query?.validationToken) {
-        console.log("Validation token received:", req.query.validationToken);
-        console.log("res",res);
-        res.setHeader('Content-Type', 'text/plain'); // This line is critical
-        return res.status(200).send(req.query.validationToken);
-      }
+  if (req.method === 'POST') {
+    // Handle validation request from Microsoft Graph
+    const validationToken = req.query.validationToken;
 
-  if (req.method == 'POST') {
-    console.log("body",req.body);
-    console.log("method",req.method);
+    if (validationToken) {
+      // Respond with the token as plain text
+      res.status(200).send(validationToken);
+      return;
+    }
 
-    const notifications = req.body.value || [];
+    // Handle regular notifications here
+    const body = req.body;
+    console.log("Incoming notification:", JSON.stringify(body, null, 2));
 
-    const token = await getToken(); // Get ROPC token again
-
-    for (const note of notifications) {
-        const resource = note.resource || note.resourceData?.['@odata.id'];
-        console.log(note,"note")
-        if (note.lifecycleEvent === "reauthorizationRequired") {
-              console.log("Reauthorization required. Recreating subscription...");
-            
-              // OPTIONAL: You can trigger a function here to recreate it using fetch or axios
-              // recreateSubscription(); // <-- implement this
-              continue;
-            }
-        if (!resource) {
-          console.error("No resource found in notification:", note);
-          continue;
-        }
-      
-        const chatMatch = resource.match(/chats\('([^']+)'\)/);
-        const messageMatch = resource.match(/messages\('([^']+)'\)/);
-      
-        if (!chatMatch || !messageMatch) {
-          console.error("Missing required IDs", { resource });
-          continue;
-        }
-      
-        const chatId = chatMatch[1];
-        const messageId = messageMatch[1];
-      
-        const message = await getMessage(chatId, messageId, token);
-        if (!message) {
-          console.error("Message fetch failed for", chatId, messageId);
-          continue;
-        }
-      
-        console.log("Received message:", message.body?.content);
-        console.log("From:", message.from?.user?.displayName || "Unknown");
-      
-        // ✅ Validate sender email
-        const senderEmail = message.from?.user?.displayName;
-        if (senderEmail === "Rahul Shinde") {
-          console.log(`Skipping reply: message not from expected sender (${senderEmail})`);
-          continue;
-        }
-      
-        await sendThankYou(chatId, token);
-      }
-      
-
-
-    return res.status(202).end();
+    // You can process the message or call other functions here
+    res.status(202).end();
+  } else {
+    res.status(405).send("Method Not Allowed");
   }
+}
+// export default async function handler(req, res) {
+//     if (req.query?.validationToken) {
+//         console.log("Validation token received:", req.query.validationToken);
+//         console.log("res",res);
+//         res.setHeader('Content-Type', 'text/plain'); // This line is critical
+//         return res.status(200).send(req.query.validationToken);
+//       }
 
-  res.status(405).end(); // Method not allowed
-} // Ensure you're using node-fetch in Node.js
+//   if (req.method == 'POST') {
+//     console.log("body",req.body);
+//     console.log("method",req.method);
+
+//     const notifications = req.body.value || [];
+
+//     const token = await getToken(); // Get ROPC token again
+
+//     for (const note of notifications) {
+//         const resource = note.resource || note.resourceData?.['@odata.id'];
+//         console.log(note,"note")
+//         if (note.lifecycleEvent === "reauthorizationRequired") {
+//               console.log("Reauthorization required. Recreating subscription...");
+            
+//               // OPTIONAL: You can trigger a function here to recreate it using fetch or axios
+//               // recreateSubscription(); // <-- implement this
+//               continue;
+//             }
+//         if (!resource) {
+//           console.error("No resource found in notification:", note);
+//           continue;
+//         }
+      
+//         const chatMatch = resource.match(/chats\('([^']+)'\)/);
+//         const messageMatch = resource.match(/messages\('([^']+)'\)/);
+      
+//         if (!chatMatch || !messageMatch) {
+//           console.error("Missing required IDs", { resource });
+//           continue;
+//         }
+      
+//         const chatId = chatMatch[1];
+//         const messageId = messageMatch[1];
+      
+//         const message = await getMessage(chatId, messageId, token);
+//         if (!message) {
+//           console.error("Message fetch failed for", chatId, messageId);
+//           continue;
+//         }
+      
+//         console.log("Received message:", message.body?.content);
+//         console.log("From:", message.from?.user?.displayName || "Unknown");
+      
+//         // ✅ Validate sender email
+//         const senderEmail = message.from?.user?.displayName;
+//         if (senderEmail === "Rahul Shinde") {
+//           console.log(`Skipping reply: message not from expected sender (${senderEmail})`);
+//           continue;
+//         }
+      
+//         await sendThankYou(chatId, token);
+//       }
+      
+
+
+//     return res.status(202).end();
+//   }
+
+//   res.status(405).end(); // Method not allowed
+// } // Ensure you're using node-fetch in Node.js
 
 async function getToken() {
   const params = new URLSearchParams();
