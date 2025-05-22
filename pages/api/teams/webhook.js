@@ -276,7 +276,10 @@ import fetch from "node-fetch";
 export default async function handler(req, res) {
   if (req.method === 'POST') {
     // Handle validation request from Microsoft Graph
+    console.log(req,"req");
+    console.log("app started here")
     const validationToken = req.query.validationToken;
+    console.log(validationToken,"validationToken")
 
     if (validationToken) {
       // Respond with the token as plain text
