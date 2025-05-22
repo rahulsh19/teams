@@ -288,6 +288,7 @@ export default async function handler(req, res) {
 
     for (const note of notifications) {
         const resource = note.resource || note.resourceData?.['@odata.id'];
+        console.log(note,"note")
         if (note.lifecycleEvent === "reauthorizationRequired") {
               console.log("Reauthorization required. Recreating subscription...");
             
