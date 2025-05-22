@@ -278,7 +278,7 @@ export default async function handler(req, res) {
         return res.status(200).send(req.query.validationToken);
       }
 
-  if (req.method === 'POST') {
+  if (req.method == 'POST') {
     console.log("body",req.body);
     console.log("method",req.method);
 
