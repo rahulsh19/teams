@@ -274,6 +274,13 @@ import fetch from "node-fetch";
 
 
 export default async function handler(req, res) {
+   if (req.method === 'GET') {
+    const validationToken = req.query.validationToken;
+    if (validationToken) {
+      // Respond with the token to verify webhook
+      return res.status(200).send(validationToken);
+    }
+  }
   if (req.method === 'POST') {
     // Handle validation request from Microsoft Graph
     console.log(req,"req");
